@@ -1,0 +1,5 @@
+Create an annotated dataset for chosen word ("nature") with 5 synset in WordNet for further analysis.
+
+We created dataset based on Brown Corpus with word "nature" and picke up 100 sentences with aprox. 20 tokens from each side of the target word.
+We created a contingency table with our annotations
+We calculated Inter-related reliability percentage and the Wu-Palmer Similarity for all pairs of synsets for further linguistic analysis of the output
