@@ -1,0 +1,154 @@
+try:
+    import nltk
+except ModuleNotFoundError:
+    ! pip install nltk
+nltk.download('wordnet')
+nltk.download('omw-1.4') # this downloads the Open Multilingual WordNet
+from nltk.corpus import wordnet
+
+# Print the total number of synsets
+nature_synsets = wordnet.synsets("nature")
+print(nature_synsets)
+print()
+print(f'The word "nature" has {len(nature_synsets)} synsets.')
+
+# Optional step as "nature" is always a noun, but can be useful in case of taking a different word
+nature_synsets_noun = wordnet.synsets("nature", pos = wordnet.NOUN)
+print(f'{len(nature_synsets_noun)} of the synsets of the word "i" correspond to "i" as a noun.')
+
+# Printing definitions and examples of each synset
+for i_synset in nature_synsets_noun:
+    print()
+    print(i_synset.name())
+    print(i_synset.definition())
+    print(i_synset.examples())
+
+import numpy as np
+import pandas as pd
+import random
+from nltk.corpus import wordnet
+from nltk.corpus import brown #Import the Brown corpus
+from sklearn.metrics import cohen_kappa_score
+
+# Extract random samples from NLTK Brown Corpus
+# Define the function for compiling 100 samples with a context length of 20 words and making sure they don't repeat by checking the file ID
+
+def samples_extract(word, num_samples=100, context_leng=20):
+    samples_list = []
+    sampled_docs = set()
+
+    while len(samples_list) < num_samples:
+        doc_id = random.choice(brown.fileids())
+
+       # Check if we've already taken samples from a document
+        if doc_id in sampled_docs:
+            continue
+        doc_words = brown.words(doc_id)   # Get the document's words
+
+        # Sample a context from the document
+        for i, token in enumerate(doc_words):
+            if token == word:
+                start = max(0, i - context_leng)
+                end = min(len(doc_words), i + context_leng + 1)
+                context = doc_words[start:end]
+                context_paragraph = ' '.join(context)
+                samples_list.append(context_paragraph)
+                sampled_docs.add(doc_id)
+                break
+
+    return samples_list
+
+
+# Call the function for our word "nature" to get the samples
+target_word = "nature"
+samples = samples_extract(target_word)
+
+# Create a dataframe for our samples using pandas
+
+df = pd.DataFrame({'Sample': samples})
+
+df.insert(0, 'Genia', None)
+df.insert(1, 'Maryia', None)
+
+print(df)
+print('\n')
+
+df.to_csv('Nature_R_Brown.csv')
+
+
+# Print the lemma of the word, the number of synsets; for each synset, the synset name, its definition, and lemmas
+
+word = 'nature'
+language = 'eng'
+
+synsets = wordnet.synsets(word, lang=language)
+
+num_synsets = len(synsets)
+
+print('******************')
+print('Word: Nature')
+print('******************\n')
+
+print(f'Number of synsets: {num_synsets}\n')
+
+
+num = 1
+for ss in synsets:
+    print(f's{num}: {ss.name()}')
+    lemmas = ss.lemma_names(lang=language)
+    lemmas = ', '.join(lemmas)
+    print(f'Lemmas: {lemmas}')
+    print(f'Gloss: {ss.definition()}')
+    print()
+    num += 1
+
+# Create the contingency table with the annotations
+
+annotated_text = pd.read_csv('Random_Nature_Brown.csv')
+
+print('******************')
+print('contingency table: ')
+print('******************\n')
+
+contingency_table = pd.crosstab(annotated_text['Genia'], annotated_text['Maryia'], margins=True)
+
+print(contingency_table)
+
+# Calculate Inter-related reliability percentage
+
+kappa = cohen_kappa_score(annotated_text['Genia'], annotated_text['Maryia'])
+
+percentage_agreement = (1 - kappa) * 100
+
+print('******************')
+print('Inter-Rater Reliability Percentage: ')
+print('******************\n')
+
+print(f'Cohen\'s Kappa: {kappa:.2f}')
+print(f'Inter-Rater Reliability Percentage: {percentage_agreement:.2f}%')
+
+print('******************')
+print('Wu-Palmer Similarity coefficient: ')
+print('******************\n')
+
+# Calculate the Wu-Palmer Similarity for all pairs of synsets
+
+word = "nature"
+synsets = wordnet.synsets(word)
+
+if not synsets:
+    print(f"No synsets found for the word '{word}'.")
+else:
+
+    print("Semantic Similarity using Wu-Palmer Similarity:")
+    for i in range(len(synsets)):
+        for j in range(i + 1, len(synsets)):
+            synset1 = synsets[i]
+            synset2 = synsets[j]
+
+            similarity = synset1.wup_similarity(synset2)
+
+            if similarity is not None:
+
+                print(f"Similarity between '{synset1.name()}' and '{synset2.name()}': {similarity:.2f}")
+
